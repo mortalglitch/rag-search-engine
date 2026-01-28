@@ -11,3 +11,5 @@ wheels/
 
 # Custom
 data/
+cache/
+uv.lock
