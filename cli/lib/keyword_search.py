@@ -44,6 +44,8 @@ def build_command() -> None:
     idx = InvertedIndex()
     idx.build()
     idx.save()
+
+    # Quick test for debugging
     docs = idx.get_documents("merida")
     print(f"First document for token 'merida' = {docs[0]}")
 
