@@ -39,27 +39,58 @@ class InvertedIndex:
         for token in set(tokens):
             self.index[token].add(doc_id)
 
+    def load(self):
+        try:
+            with open(self.index_path, "rb") as f:
+                self.index = pickle.load(f)
+        except FileNotFoundError:
+            print("Error: The index file does not exist.")
+        try:
+            with open(self.docmap_path, "rb") as f:
+                self.docmap = pickle.load(f)
+        except FileNotFoundError:
+            print("The docmap file does not exist.")
+
 
 def build_command() -> None:
     idx = InvertedIndex()
     idx.build()
     idx.save()
 
-    # Quick test for debugging
-    docs = idx.get_documents("merida")
-    print(f"First document for token 'merida' = {docs[0]}")
+    # # Quick test for debugging
+    # docs = idx.get_documents("merida")
+    # print(f"First document for token 'merida' = {docs[0]}")
 
 
 def search_command(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[dict]:
-    movies = load_movies()
+    # Load Index
+    invertIndex = InvertedIndex()
+    invertIndex.load()
+
+    query_tokens = tokenize_text(query)
+
     results = []
-    for movie in movies:
-        query_tokens = tokenize_text(query)
-        title_tokens = tokenize_text(movie["title"])
-        if has_matching_token(query_tokens, title_tokens):
-            results.append(movie)
+
+    for token in query_tokens:
+        if len(results) >= limit:
+            break
+        current_movies = invertIndex.get_documents(token)
+        for movie_id in current_movies:
             if len(results) >= limit:
                 break
+            results.append(invertIndex.docmap[movie_id])
+
+    return results
+
+    # movies = load_movies()
+    # results = []
+    # for movie in movies:
+    #     query_tokens = tokenize_text(query)
+    #     title_tokens = tokenize_text(movie["title"])
+    #     if has_matching_token(query_tokens, title_tokens):
+    #         results.append(movie)
+    #         if len(results) >= limit:
+    #             break
 
     return results
 
