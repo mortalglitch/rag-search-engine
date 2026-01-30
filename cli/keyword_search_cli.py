@@ -2,7 +2,7 @@
 
 import argparse
 
-from lib.keyword_search import build_command, search_command
+from lib.keyword_search import build_command, search_command, tf_command
 
 
 def main() -> None:
@@ -11,6 +11,16 @@ def main() -> None:
 
     subparsers.add_parser(
         "build", help="Build the inverted index for quicker searching"
+    )
+
+    tf_parser = subparsers.add_parser(
+        "tf", help="Return the amount of times a term appeared in a movie id"
+    )
+    tf_parser.add_argument(
+        "document_id", type=int, help="ID of the movie you are looking for"
+    )
+    tf_parser.add_argument(
+        "term", type=str, help="term you are looking for the count of"
     )
 
     search_parser = subparsers.add_parser("search", help="Search movies using BM25")
@@ -28,6 +38,11 @@ def main() -> None:
             results = search_command(args.query)
             for i, res in enumerate(results, 1):
                 print(f"{i}. ({res['id']}) {res['title']}")
+        case "tf":
+            tf = tf_command(args.document_id, args.term)
+            print(
+                f"Term frequency of '{args.term}' in document '{args.document_id}': {tf}"
+            )
         case _:
             parser.print_help()
 

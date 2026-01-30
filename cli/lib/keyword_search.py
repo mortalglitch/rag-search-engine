@@ -1,7 +1,7 @@
 import os
 import pickle
 import string
-from collections import defaultdict
+from collections import Counter, defaultdict
 
 from nltk.stem import PorterStemmer
 
@@ -14,6 +14,8 @@ class InvertedIndex:
         self.docmap: dict[int, dict] = {}
         self.index_path = os.path.join(CACHE_DIR, "index.pkl")
         self.docmap_path = os.path.join(CACHE_DIR, "docmap.pkl")
+        self.term_frequencies_path = os.path.join(CACHE_DIR, "term_frequencies.pkl")
+        self.term_frequencies: dict[int, Counter] = {}
 
     def build(self) -> None:
         movies = load_movies()
@@ -29,15 +31,32 @@ class InvertedIndex:
             pickle.dump(self.index, f)
         with open(self.docmap_path, "wb") as f:
             pickle.dump(self.docmap, f)
+        with open(self.term_frequencies_path, "wb") as f:
+            pickle.dump(self.term_frequencies, f)
 
     def get_documents(self, term: str) -> list[int]:
         doc_ids = self.index.get(term, set())
         return sorted(list(doc_ids))
 
+    def get_tf(self, doc_id, term) -> int:
+        term_tokens = tokenize_text(term)
+        if len(term_tokens) > 1:
+            raise ValueError("Only one term was expected")
+        elif len(term_tokens) == 0:
+            return 0
+        else:
+            return self.term_frequencies[doc_id][term_tokens[0]]
+        return 0
+
     def __add_document(self, doc_id: int, text: str) -> None:
         tokens = tokenize_text(text)
+
+        if doc_id not in self.term_frequencies:
+            self.term_frequencies[doc_id] = Counter()
+
         for token in set(tokens):
             self.index[token].add(doc_id)
+        self.term_frequencies[doc_id].update(tokens)
 
     def load(self):
         try:
@@ -50,6 +69,11 @@ class InvertedIndex:
                 self.docmap = pickle.load(f)
         except FileNotFoundError:
             print("The docmap file does not exist.")
+        try:
+            with open(self.term_frequencies_path, "rb") as f:
+                self.term_frequencies = pickle.load(f)
+        except FileNotFoundError:
+            print("The term frequency file does not exist.")
 
 
 def build_command() -> None:
@@ -93,6 +117,13 @@ def search_command(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[dict]:
     #             break
 
     return results
+
+
+def tf_command(doc_id: int, term: str) -> int:
+    invertIndex = InvertedIndex()
+    invertIndex.load()
+
+    return invertIndex.get_tf(doc_id, term)
 
 
 def has_matching_token(query_tokens: list[str], title_tokens: list[str]) -> bool:
