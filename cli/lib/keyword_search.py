@@ -1,3 +1,4 @@
+import math
 import os
 import pickle
 import string
@@ -38,6 +39,20 @@ class InvertedIndex:
         doc_ids = self.index.get(term, set())
         return sorted(list(doc_ids))
 
+    def get_idf(self, term: str) -> float:
+        tokens = tokenize_text(term)
+
+        if len(tokens) != 1:
+            raise ValueError("IDF Search term must be one word.")
+
+        total_doc_count = len(self.docmap)
+        if tokens[0] in self.index:
+            term_match_doc_count = len(self.index[tokens[0]])
+        else:
+            term_match_doc_count = 0
+
+        return math.log((total_doc_count + 1) / (term_match_doc_count + 1))
+
     def get_tf(self, doc_id, term) -> int:
         term_tokens = tokenize_text(term)
         if len(term_tokens) > 1:
@@ -47,6 +62,12 @@ class InvertedIndex:
         else:
             return self.term_frequencies[doc_id][term_tokens[0]]
         return 0
+
+    def get_tf_idf(self, doc_id: int, term: str) -> float:
+        tf = self.get_tf(doc_id, term)
+        idf = self.get_idf(term)
+
+        return tf * idf
 
     def __add_document(self, doc_id: int, text: str) -> None:
         tokens = tokenize_text(text)
@@ -84,6 +105,14 @@ def build_command() -> None:
     # # Quick test for debugging
     # docs = idx.get_documents("merida")
     # print(f"First document for token 'merida' = {docs[0]}")
+
+
+def idf_command(term: str):
+    invertIndex = InvertedIndex()
+    invertIndex.load()
+
+    idf = invertIndex.get_idf(term)
+    return idf
 
 
 def search_command(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[dict]:
@@ -124,6 +153,13 @@ def tf_command(doc_id: int, term: str) -> int:
     invertIndex.load()
 
     return invertIndex.get_tf(doc_id, term)
+
+
+def tf_idf_command(doc_id: int, term: str) -> float:
+    invertIndex = InvertedIndex()
+    invertIndex.load()
+
+    return invertIndex.get_tf_idf(doc_id, term)
 
 
 def has_matching_token(query_tokens: list[str], title_tokens: list[str]) -> bool:
