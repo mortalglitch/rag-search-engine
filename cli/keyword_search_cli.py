@@ -3,6 +3,7 @@
 import argparse
 
 from lib.keyword_search import (
+    bm25_idf_command,
     build_command,
     idf_command,
     search_command,
@@ -17,6 +18,13 @@ def main() -> None:
 
     subparsers.add_parser(
         "build", help="Build the inverted index for quicker searching"
+    )
+
+    bm25_idf_parser = subparsers.add_parser(
+        "bm25idf", help="Get BM25 IDF score for a given term"
+    )
+    bm25_idf_parser.add_argument(
+        "term", type=str, help="Term to get BM25 IDF score for"
     )
 
     tf_parser = subparsers.add_parser(
@@ -50,6 +58,9 @@ def main() -> None:
     args = parser.parse_args()
 
     match args.command:
+        case "bm25idf":
+            bm25idf = bm25_idf_command(args.term)
+            print(f"BM25 Inverse document frequency of '{args.term}': {bm25idf:.2f}")
         case "build":
             print("Building inverted index...")
             build_command()

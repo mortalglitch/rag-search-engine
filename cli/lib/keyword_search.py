@@ -35,6 +35,24 @@ class InvertedIndex:
         with open(self.term_frequencies_path, "wb") as f:
             pickle.dump(self.term_frequencies, f)
 
+    def get_bm25_idf(self, term: str) -> float:
+        tokens = tokenize_text(term)
+
+        if len(tokens) != 1:
+            raise ValueError("IDF Search term must be one word.")
+
+        total_doc_count = len(self.docmap)
+        if tokens[0] in self.index:
+            term_match_doc_count = len(self.index[tokens[0]])
+        else:
+            term_match_doc_count = 0
+
+        return math.log(
+            (total_doc_count - term_match_doc_count + 0.5)
+            / (term_match_doc_count + 0.5)
+            + 1
+        )
+
     def get_documents(self, term: str) -> list[int]:
         doc_ids = self.index.get(term, set())
         return sorted(list(doc_ids))
@@ -105,6 +123,14 @@ def build_command() -> None:
     # # Quick test for debugging
     # docs = idx.get_documents("merida")
     # print(f"First document for token 'merida' = {docs[0]}")
+
+
+def bm25_idf_command(term: str):
+    invertIndex = InvertedIndex()
+    invertIndex.load()
+
+    bm25idf = invertIndex.get_bm25_idf(term)
+    return bm25idf
 
 
 def idf_command(term: str):
