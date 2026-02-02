@@ -6,7 +6,13 @@ from collections import Counter, defaultdict
 
 from nltk.stem import PorterStemmer
 
-from .search_utils import CACHE_DIR, DEFAULT_SEARCH_LIMIT, load_movies, load_stopwords
+from .search_utils import (
+    BM25_K1,
+    CACHE_DIR,
+    DEFAULT_SEARCH_LIMIT,
+    load_movies,
+    load_stopwords,
+)
 
 
 class InvertedIndex:
@@ -52,6 +58,11 @@ class InvertedIndex:
             / (term_match_doc_count + 0.5)
             + 1
         )
+
+    def get_bm25_tf(self, doc_id, term, k1=BM25_K1) -> float:
+        raw_tf = self.get_tf(doc_id, term)
+        bm25_tf = (raw_tf * (k1 + 1)) / (raw_tf + k1)
+        return bm25_tf
 
     def get_documents(self, term: str) -> list[int]:
         doc_ids = self.index.get(term, set())
@@ -131,6 +142,14 @@ def bm25_idf_command(term: str):
 
     bm25idf = invertIndex.get_bm25_idf(term)
     return bm25idf
+
+
+def bm25_tf_command(doc_id: str, term: str, k1=BM25_K1):
+    invertIndex = InvertedIndex()
+    invertIndex.load()
+
+    bm25_tf = invertIndex.get_bm25_tf(doc_id, term, k1)
+    return bm25_tf
 
 
 def idf_command(term: str):
