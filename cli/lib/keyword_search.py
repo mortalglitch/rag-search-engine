@@ -9,6 +9,7 @@ from nltk.stem import PorterStemmer
 from .search_utils import (
     BM25_B,
     BM25_K1,
+    BM25_SEARCH_LIMIT,
     CACHE_DIR,
     DEFAULT_SEARCH_LIMIT,
     load_movies,
@@ -26,6 +27,37 @@ class InvertedIndex:
         self.docmap_path = os.path.join(CACHE_DIR, "docmap.pkl")
         self.term_frequencies_path = os.path.join(CACHE_DIR, "term_frequencies.pkl")
         self.term_frequencies: dict[int, Counter] = {}
+
+    def bm25(self, doc_id: int, term: str) -> float:
+        bm25_tf = self.get_bm25_tf(doc_id, term)
+        bm25_idf = self.get_bm25_idf(term)
+        return bm25_tf * bm25_idf
+
+    def bm25_search(self, query, limit):
+        tokens = tokenize_text(query)
+        scores = {}
+        for doc in self.docmap:
+            bm25 = 0.0
+            for token in tokens:
+                bm25 += self.bm25(doc, token)
+            scores[doc] = bm25
+
+        desc_sort_scores = sorted(
+            scores.items(), key=lambda item: item[1], reverse=True
+        )
+
+        highest_scores = desc_sort_scores[:limit]
+        results: list[dict] = []
+        for doc_id, score in highest_scores:
+            doc = self.docmap[doc_id]
+            search_result: dict = {}
+            search_result["id"] = doc["id"]
+            search_result["title"] = doc["title"]
+            search_result["description"] = doc["description"]
+            search_result["score"] = score
+            results.append(search_result)
+
+        return results
 
     def build(self) -> None:
         movies = load_movies()
@@ -170,6 +202,14 @@ def bm25_idf_command(term: str):
 
     bm25idf = invertIndex.get_bm25_idf(term)
     return bm25idf
+
+
+def bm25_search_command(term: str, limit=BM25_SEARCH_LIMIT):
+    invertIndex = InvertedIndex()
+    invertIndex.load()
+
+    bm25_search_results = invertIndex.bm25_search(term, limit)
+    return bm25_search_results
 
 
 def bm25_tf_command(doc_id: str, term: str, k1=BM25_K1, b=BM25_B):

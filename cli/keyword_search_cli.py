@@ -4,6 +4,7 @@ import argparse
 
 from lib.keyword_search import (
     bm25_idf_command,
+    bm25_search_command,
     bm25_tf_command,
     build_command,
     idf_command,
@@ -28,6 +29,11 @@ def main() -> None:
     bm25_idf_parser.add_argument(
         "term", type=str, help="Term to get BM25 IDF score for"
     )
+
+    bm25search_parser = subparsers.add_parser(
+        "bm25search", help="Search movies using full BM25 scoring"
+    )
+    bm25search_parser.add_argument("query", type=str, help="Search query")
 
     bm25_tf_parser = subparsers.add_parser(
         "bm25tf", help="Get BM25 TF score for a given document ID and term"
@@ -75,6 +81,10 @@ def main() -> None:
         case "bm25idf":
             bm25idf = bm25_idf_command(args.term)
             print(f"BM25 Inverse document frequency of '{args.term}': {bm25idf:.2f}")
+        case "bm25search":
+            bm25_search = bm25_search_command(args.query)
+            for i, res in enumerate(bm25_search, 1):
+                print(f"{i}. ({res['id']}) {res['title']} - Score: {res['score']:.2f}")
         case "bm25tf":
             bm25tf = bm25_tf_command(args.doc_id, args.term, args.k1, args.b)
             print(
