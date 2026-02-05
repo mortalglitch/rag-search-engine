@@ -2,7 +2,7 @@
 
 import argparse
 
-from lib.semantic_search import verify_model
+from lib.semantic_search import embed_text, verify_model
 
 
 def main():
@@ -13,9 +13,16 @@ def main():
         "verify", help="Get information about the current loaded model"
     )
 
+    embed_text_parser = subparsers.add_parser(
+        "embed_text", help="Get embedded text from input"
+    )
+    embed_text_parser.add_argument("text", type=str, help="Text to embed")
+
     args = parser.parse_args()
 
     match args.command:
+        case "embed_text":
+            embed_text(args.text)
         case "verify":
             verify_model()
         case _:
