@@ -1,7 +1,8 @@
 import os
+from typing import Any
 
 import numpy as np
-from lib.search_utils import MOVIE_EMBEDDINGS_PATH, load_movies
+from lib.search_utils import DEFAULT_SEARCH_LIMIT, MOVIE_EMBEDDINGS_PATH, load_movies
 from sentence_transformers import SentenceTransformer
 
 
@@ -57,6 +58,44 @@ class SemanticSearch:
 
         return self.build_embeddings(documents)
 
+    def search(self, query, limit: int = DEFAULT_SEARCH_LIMIT):
+        if self.embeddings is not None:
+            embed_query = self.generate_embedding(query)
+            results: list[tuple[float, dict[Any, Any]]] = []
+            for index, embedding in enumerate(self.embeddings):
+                similarity_score = cosine_similarity(embed_query, embedding)
+                results.append((similarity_score, self.document_map[index + 1]))
+            sorted_results = sorted(results, key=lambda item: item[0], reverse=True)
+
+            limited_results = sorted_results[:limit]
+
+            final_results: list[dict] = []
+            for score, doc in limited_results:
+                search_result: dict = {}
+                search_result["id"] = doc["id"]
+                search_result["title"] = doc["title"]
+                search_result["description"] = doc["description"]
+                search_result["score"] = score
+                final_results.append(search_result)
+
+            return final_results
+
+        else:
+            raise ValueError(
+                "No embeddings loaded. Call `load_or_create_embeddings` first."
+            )
+
+
+def cosine_similarity(vec1, vec2):
+    dot_product = np.dot(vec1, vec2)
+    norm1 = np.linalg.norm(vec1)
+    norm2 = np.linalg.norm(vec2)
+
+    if norm1 == 0 or norm2 == 0:
+        return 0.0
+
+    return dot_product / (norm1 * norm2)
+
 
 def embed_query_text(query):
     sem_search = SemanticSearch()
@@ -73,6 +112,22 @@ def embed_text(text):
     print(f"Text: {text}")
     print(f"First 3 dimensions: {embedded_result[:3]}")
     print(f"Dimensions: {embedded_result.shape[0]}")
+
+
+def semantic_search(query, limit):
+    sem_search = SemanticSearch()
+    documents = load_movies()
+    sem_search.load_or_create_embeddings(documents)
+
+    result = sem_search.search(query, limit)
+
+    print(f"Query: {query}")
+    print(f"Top {len(result)}:")
+
+    for index, search_result in enumerate(result):
+        print(
+            f"{index + 1}. {search_result['title']} (Score: {search_result['score']:.4f})\n{search_result['description']}\n"
+        )
 
 
 def verify_embeddings():
