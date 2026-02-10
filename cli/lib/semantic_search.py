@@ -3,6 +3,7 @@ from typing import Any
 
 import numpy as np
 from lib.search_utils import (
+    DEFAULT_CHUNK_OVERLAP,
     DEFAULT_CHUNK_SIZE,
     DEFAULT_SEARCH_LIMIT,
     MOVIE_EMBEDDINGS_PATH,
@@ -91,11 +92,24 @@ class SemanticSearch:
             )
 
 
-def chunk_text(text: str, chunk_size: int = DEFAULT_CHUNK_SIZE):
+def chunk_text(
+    text: str,
+    chunk_size: int = DEFAULT_CHUNK_SIZE,
+    overlap: int = DEFAULT_CHUNK_OVERLAP,
+):
     split_words = text.split()
-    return [
-        split_words[i : i + chunk_size] for i in range(0, len(split_words), chunk_size)
-    ]
+    # return [
+    #     split_words[i : i + chunk_size] for i in range(0, len(split_words), chunk_size)
+    # ] # - old one liner
+
+    i = 0
+    chunks: list[list[str]] = []
+    while i < len(split_words) and (i == 0 or (len(split_words) - i) > overlap):
+        chunk = split_words[i : i + chunk_size]
+        chunks.append(chunk)
+        i += chunk_size - overlap
+
+    return chunks
 
 
 def cosine_similarity(vec1, vec2):

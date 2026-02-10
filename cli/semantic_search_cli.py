@@ -2,7 +2,11 @@
 
 import argparse
 
-from lib.search_utils import DEFAULT_CHUNK_SIZE, DEFAULT_SEARCH_LIMIT
+from lib.search_utils import (
+    DEFAULT_CHUNK_OVERLAP,
+    DEFAULT_CHUNK_SIZE,
+    DEFAULT_SEARCH_LIMIT,
+)
 from lib.semantic_search import (
     chunk_text,
     embed_query_text,
@@ -58,12 +62,19 @@ def main():
         default=DEFAULT_CHUNK_SIZE,
         help="Size of desired chunk",
     )
+    chunk_parser.add_argument(
+        "--overlap",
+        type=int,
+        nargs="?",
+        default=DEFAULT_CHUNK_OVERLAP,
+        help="Size of desired chunk",
+    )
 
     args = parser.parse_args()
 
     match args.command:
         case "chunk":
-            results = chunk_text(args.text, args.chunk_size)
+            results = chunk_text(args.text, args.chunk_size, args.overlap)
             # total_chars = sum(len(word) for sublist in results for word in sublist)
             # The above calculates the count of all letters in the list but doesn't count whitespace.
             total_chars = len(args.text)
