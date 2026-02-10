@@ -2,8 +2,9 @@
 
 import argparse
 
-from lib.search_utils import DEFAULT_SEARCH_LIMIT
+from lib.search_utils import DEFAULT_CHUNK_SIZE, DEFAULT_SEARCH_LIMIT
 from lib.semantic_search import (
+    chunk_text,
     embed_query_text,
     embed_text,
     semantic_search,
@@ -46,9 +47,29 @@ def main():
         help="Number of search results to return",
     )
 
+    chunk_parser = subparsers.add_parser(
+        "chunk", help="Split long descriptions for embedding"
+    )
+    chunk_parser.add_argument("text", type=str, help="Text to chucnk")
+    chunk_parser.add_argument(
+        "--chunk-size",
+        type=int,
+        nargs="?",
+        default=DEFAULT_CHUNK_SIZE,
+        help="Size of desired chunk",
+    )
+
     args = parser.parse_args()
 
     match args.command:
+        case "chunk":
+            results = chunk_text(args.text, args.chunk_size)
+            # total_chars = sum(len(word) for sublist in results for word in sublist)
+            # The above calculates the count of all letters in the list but doesn't count whitespace.
+            total_chars = len(args.text)
+            print(f"Chunking {total_chars} characters")
+            for i, res in enumerate(results, 1):
+                print(f"{i}. {' '.join(res)}")
         case "embedquery":
             embed_query_text(args.query)
         case "embed_text":

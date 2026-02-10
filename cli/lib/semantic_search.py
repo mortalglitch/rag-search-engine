@@ -2,7 +2,12 @@ import os
 from typing import Any
 
 import numpy as np
-from lib.search_utils import DEFAULT_SEARCH_LIMIT, MOVIE_EMBEDDINGS_PATH, load_movies
+from lib.search_utils import (
+    DEFAULT_CHUNK_SIZE,
+    DEFAULT_SEARCH_LIMIT,
+    MOVIE_EMBEDDINGS_PATH,
+    load_movies,
+)
 from sentence_transformers import SentenceTransformer
 
 
@@ -84,6 +89,13 @@ class SemanticSearch:
             raise ValueError(
                 "No embeddings loaded. Call `load_or_create_embeddings` first."
             )
+
+
+def chunk_text(text: str, chunk_size: int = DEFAULT_CHUNK_SIZE):
+    split_words = text.split()
+    return [
+        split_words[i : i + chunk_size] for i in range(0, len(split_words), chunk_size)
+    ]
 
 
 def cosine_similarity(vec1, vec2):
