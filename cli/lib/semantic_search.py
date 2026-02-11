@@ -1,4 +1,5 @@
 import os
+import re
 from typing import Any
 
 import numpy as np
@@ -6,6 +7,7 @@ from lib.search_utils import (
     DEFAULT_CHUNK_OVERLAP,
     DEFAULT_CHUNK_SIZE,
     DEFAULT_SEARCH_LIMIT,
+    MAX_CHUNK_SIZE,
     MOVIE_EMBEDDINGS_PATH,
     load_movies,
 )
@@ -138,6 +140,26 @@ def embed_text(text):
     print(f"Text: {text}")
     print(f"First 3 dimensions: {embedded_result[:3]}")
     print(f"Dimensions: {embedded_result.shape[0]}")
+
+
+def semantic_chunk_text(
+    text: str,
+    max_chunk_size: int = MAX_CHUNK_SIZE,
+    overlap: int = DEFAULT_CHUNK_OVERLAP,
+):
+    split_words = re.split(r"(?<=[.!?])\s+", text)
+    # return [
+    #     split_words[i : i + chunk_size] for i in range(0, len(split_words), chunk_size)
+    # ] # - old one liner
+
+    i = 0
+    chunks: list[list[str]] = []
+    while i < len(split_words) and (i == 0 or (len(split_words) - i) > overlap):
+        chunk = split_words[i : i + max_chunk_size]
+        chunks.append(chunk)
+        i += max_chunk_size - overlap
+
+    return chunks
 
 
 def semantic_search(query, limit):

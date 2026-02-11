@@ -6,11 +6,13 @@ from lib.search_utils import (
     DEFAULT_CHUNK_OVERLAP,
     DEFAULT_CHUNK_SIZE,
     DEFAULT_SEARCH_LIMIT,
+    MAX_CHUNK_SIZE,
 )
 from lib.semantic_search import (
     chunk_text,
     embed_query_text,
     embed_text,
+    semantic_chunk_text,
     semantic_search,
     verify_embeddings,
     verify_model,
@@ -51,10 +53,29 @@ def main():
         help="Number of search results to return",
     )
 
+    semantic_chunk_parser = subparsers.add_parser(
+        "semantic_chunk", help="Parse chunk semantically"
+    )
+    semantic_chunk_parser.add_argument("text", type=str, help="Text to chunk")
+    semantic_chunk_parser.add_argument(
+        "--max-chunk-size",
+        type=int,
+        nargs="?",
+        default=MAX_CHUNK_SIZE,
+        help="Max size allowed for chunks",
+    )
+    semantic_chunk_parser.add_argument(
+        "--overlap",
+        type=int,
+        nargs="?",
+        default=DEFAULT_CHUNK_OVERLAP,
+        help="Size of desired chunk",
+    )
+
     chunk_parser = subparsers.add_parser(
         "chunk", help="Split long descriptions for embedding"
     )
-    chunk_parser.add_argument("text", type=str, help="Text to chucnk")
+    chunk_parser.add_argument("text", type=str, help="Text to chunk")
     chunk_parser.add_argument(
         "--chunk-size",
         type=int,
@@ -87,6 +108,12 @@ def main():
             embed_text(args.text)
         case "search":
             semantic_search(args.query, args.limit)
+        case "semantic_chunk":
+            results = semantic_chunk_text(args.text, args.max_chunk_size, args.overlap)
+            total_chars = len(args.text)
+            print(f"Semantically chunking {total_chars} characters")
+            for i, res in enumerate(results, 1):
+                print(f"{i}. {' '.join(res)}")
         case "verify":
             verify_model()
         case "verify_embeddings":
