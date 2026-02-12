@@ -10,6 +10,7 @@ from lib.search_utils import (
 )
 from lib.semantic_search import (
     chunk_text,
+    embed_chunks,
     embed_query_text,
     embed_text,
     semantic_chunk_text,
@@ -29,6 +30,10 @@ def main():
 
     subparsers.add_parser(
         "verify_embeddings", help="Ensure embeddings are properly loaded."
+    )
+
+    embed_chunks_parser = subparsers.add_parser(
+        "embed_chunks", help="Embeds data as chunks"
     )
 
     embed_query_text_parser = subparsers.add_parser(
@@ -102,6 +107,8 @@ def main():
             print(f"Chunking {total_chars} characters")
             for i, res in enumerate(results, 1):
                 print(f"{i}. {' '.join(res)}")
+        case "embed_chunks":
+            embed_chunks()
         case "embedquery":
             embed_query_text(args.query)
         case "embed_text":
@@ -113,7 +120,7 @@ def main():
             total_chars = len(args.text)
             print(f"Semantically chunking {total_chars} characters")
             for i, res in enumerate(results, 1):
-                print(f"{i}. {' '.join(res)}")
+                print(f"{i}. {res}")
         case "verify":
             verify_model()
         case "verify_embeddings":
