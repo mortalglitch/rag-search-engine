@@ -14,6 +14,7 @@ from lib.semantic_search import (
     embed_query_text,
     embed_text,
     semantic_chunk_text,
+    semantic_chunked_search,
     semantic_search,
     verify_embeddings,
     verify_model,
@@ -51,6 +52,18 @@ def main():
     )
     search_parser.add_argument("query", type=str, help="Search query")
     search_parser.add_argument(
+        "--limit",
+        type=int,
+        nargs="?",
+        default=DEFAULT_SEARCH_LIMIT,
+        help="Number of search results to return",
+    )
+
+    search_chunked_parser = subparsers.add_parser(
+        "search_chunked", help="Search movies using semantic search"
+    )
+    search_chunked_parser.add_argument("query", type=str, help="Search query")
+    search_chunked_parser.add_argument(
         "--limit",
         type=int,
         nargs="?",
@@ -115,6 +128,8 @@ def main():
             embed_text(args.text)
         case "search":
             semantic_search(args.query, args.limit)
+        case "search_chunked":
+            semantic_chunked_search(args.query, args.limit)
         case "semantic_chunk":
             results = semantic_chunk_text(args.text, args.max_chunk_size, args.overlap)
             total_chars = len(args.text)
