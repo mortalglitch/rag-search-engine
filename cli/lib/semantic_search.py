@@ -266,19 +266,36 @@ def semantic_chunk_text(
     max_chunk_size: int = MAX_CHUNK_SIZE,
     overlap: int = DEFAULT_CHUNK_OVERLAP,
 ):
-    split_words = re.split(r"(?<=[.!?])\s+", text)
+    striped_text = text.strip()
+    if not striped_text:
+        return []
+
+    split_words = re.split(r"(?<=[.!?])\s+", striped_text)
     # return [
     #     split_words[i : i + chunk_size] for i in range(0, len(split_words), chunk_size)
     # ] # - old one liner
 
+    if len(split_words) == 1 and not split_words[0].endswith((".", "!", "?")):
+        split_words = [striped_text]
+
     i = 0
-    chunks: list[str] = []
+    chunks: list[list[str]] = []
     while i < len(split_words) and (i == 0 or (len(split_words) - i) > overlap):
         chunk = split_words[i : i + max_chunk_size]
-        chunks.append(" ".join(chunk))
+        good_chunk: list[str] = []
+        for item in chunk:
+            good_chunk.append(item.strip())
+        if not good_chunk:
+            continue
+        chunks.append(good_chunk)
         i += max_chunk_size - overlap
 
-    return chunks
+    clean_chunks: list[str] = []
+    for chunk in chunks:
+        clean_chunk = " ".join(chunk)
+        clean_chunks.append(clean_chunk)
+
+    return clean_chunks
 
 
 def semantic_search(query, limit):
