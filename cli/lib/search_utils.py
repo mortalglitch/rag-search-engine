@@ -30,3 +30,22 @@ def load_movies() -> list[dict]:
 def load_stopwords() -> list[str]:
     with open(STOPWORDS_PATH, "r") as f:
         return f.read().splitlines()
+
+
+def normalize_scores(scores: list[float]):
+    if scores is None or len(scores) == 0:
+        return []
+
+    min_score = min(scores)
+    max_score = max(scores)
+
+    scores_normalized: list[float] = []
+
+    if min_score == max_score:
+        for score in scores:
+            scores_normalized.append(1.0)
+    else:
+        for score in scores:
+            current_score = (score - min_score) / (max_score - min_score)
+            scores_normalized.append(current_score)
+    return scores_normalized
