@@ -8,6 +8,8 @@ DEFAULT_CHUNK_OVERLAP = 0
 BM25_SEARCH_LIMIT = 5
 DOCUMENT_PREVIEW_LENGTH = 100
 SCORE_PRECISION = 3
+DEFAULT_HYBRID_ALPHA = 0.5
+DEFAULT_HYBRID_LIMIT = 5
 
 BM25_K1 = 1.5
 BM25_B = 0.75
@@ -30,6 +32,12 @@ def load_movies() -> list[dict]:
 def load_stopwords() -> list[str]:
     with open(STOPWORDS_PATH, "r") as f:
         return f.read().splitlines()
+
+
+def hybrid_score(
+    bm25_score: float, semantic_score: float, alpha: float = DEFAULT_HYBRID_ALPHA
+):
+    return alpha * bm25_score + (1 - alpha) * semantic_score
 
 
 def normalize_scores(scores: list[float]):
