@@ -29,9 +29,6 @@ class HybridSearch:
         self.idx.load()
         return self.idx.bm25_search(query, limit)
 
-    def weighted_search(self, query, alpha, limit=5):
-        raise NotImplementedError("Weighted hybrid search is not implemented yet.")
-
     def rrf_search(self, query, k, limit=10):
         raise NotImplementedError("RRF hybrid search is not implemented yet.")
 
