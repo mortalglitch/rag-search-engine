@@ -10,6 +10,7 @@ DOCUMENT_PREVIEW_LENGTH = 100
 SCORE_PRECISION = 3
 DEFAULT_HYBRID_ALPHA = 0.5
 DEFAULT_HYBRID_LIMIT = 5
+DEFAULT_K = 60
 
 BM25_K1 = 1.5
 BM25_B = 0.75
@@ -57,3 +58,9 @@ def normalize_scores(scores: list[float]):
             current_score = (score - min_score) / (max_score - min_score)
             scores_normalized.append(current_score)
     return scores_normalized
+
+
+def rrf_score(rank: int, k: int = DEFAULT_K):
+    if rank is None:
+        return 0
+    return 1 / (k + rank)
