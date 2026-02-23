@@ -1,10 +1,12 @@
 import os
+from typing import Optional
 
 from lib.search_utils import (
     DEFAULT_HYBRID_ALPHA,
     DEFAULT_HYBRID_LIMIT,
     DOCUMENT_PREVIEW_LENGTH,
     SCORE_PRECISION,
+    enhance_query,
     hybrid_score,
     load_movies,
     normalize_scores,
@@ -148,9 +150,17 @@ class HybridSearch:
         return results
 
 
-def rrf_search_command(query, k_value, limit):
+def rrf_search_command(query, k_value, limit, enhancement: Optional[str] = None):
     documents = load_movies()
     hy_search = HybridSearch(documents)
+
+    original_query = query
+    updated_query = None
+    if enhancement:
+        updated_query = enhance_query(query, method=enhancement)
+        if query != updated_query:
+            print(f"Enhanced query ({enhancement}): '{query}' -> '{updated_query}'\n")
+            query = updated_query
 
     results = hy_search.rrf_search(query, k_value, limit)
 

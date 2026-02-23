@@ -57,6 +57,12 @@ def main() -> None:
         default=DEFAULT_HYBRID_LIMIT,
         help="Number of search results to return",
     )
+    rrf_search_parser.add_argument(
+        "--enhance",
+        type=str,
+        choices=["spell"],
+        help="Query enhancement method",
+    )
 
     args = parser.parse_args()
 
@@ -66,7 +72,7 @@ def main() -> None:
             for score in results:
                 print(f"* {score:.4f}")
         case "rrf-search":
-            rrf_search_command(args.query, args.k, args.limit)
+            rrf_search_command(args.query, args.k, args.limit, args.enhance)
         case "weighted-search":
             weighted_search_command(args.query, args.alpha, args.limit)
         case _:

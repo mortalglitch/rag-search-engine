@@ -1,5 +1,9 @@
 import json
 import os
+from typing import Optional
+
+from dotenv import load_dotenv
+from google import genai
 
 DEFAULT_SEARCH_LIMIT = 5
 DEFAULT_CHUNK_SIZE = 200
@@ -22,6 +26,14 @@ CACHE_DIR = os.path.join(PROJECT_ROOT, "cache")
 MOVIE_EMBEDDINGS_PATH = os.path.join(PROJECT_ROOT, "cache/movie_embeddings.npy")
 CHUNK_EMBEDDINGS_PATH = os.path.join(PROJECT_ROOT, "cache/chunk_embeddings.npy")
 CHUNK_METADATA_PATH = os.path.join(PROJECT_ROOT, "cache/chunk_metadata.json")
+
+
+# AI Model information and setup
+load_dotenv()
+api_key = os.environ.get("GEMINI_API_KEY")
+if api_key != None:
+    print(f"Using key {api_key[:6]}...")
+    client = genai.Client(api_key=api_key)
 
 
 def load_movies() -> list[dict]:
@@ -64,3 +76,29 @@ def rrf_score(rank: int, k: int = DEFAULT_K):
     if rank is None:
         return 0
     return 1 / (k + rank)
+
+
+def spell_correct(query: str) -> str:
+    prompt = f"""Fix any spelling errors in this movie search query.
+
+    Only correct obvious typos. Don't change correctly spelled words.
+
+    Query: "{query}"
+
+    If no errors, return the original query.
+    Corrected:"""
+
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt,
+    )
+    corrected = (response.text or "").strip().strip('"')
+    return corrected if corrected else query
+
+
+def enhance_query(query: str, method: Optional[str] = None) -> str:
+    match method:
+        case "spell":
+            return spell_correct(query)
+        case _:
+            return query
