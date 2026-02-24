@@ -5,11 +5,13 @@ from lib.search_utils import (
     DEFAULT_HYBRID_ALPHA,
     DEFAULT_HYBRID_LIMIT,
     DOCUMENT_PREVIEW_LENGTH,
+    RERANK_MULT,
     SCORE_PRECISION,
     enhance_query,
     hybrid_score,
     load_movies,
     normalize_scores,
+    rerank_results,
     rrf_score,
 )
 
@@ -150,7 +152,13 @@ class HybridSearch:
         return results
 
 
-def rrf_search_command(query, k_value, limit, enhancement: Optional[str] = None):
+def rrf_search_command(
+    query,
+    k_value,
+    limit,
+    enhancement: Optional[str] = None,
+    rerank_method: Optional[str] = None,
+):
     documents = load_movies()
     hy_search = HybridSearch(documents)
 
@@ -162,7 +170,13 @@ def rrf_search_command(query, k_value, limit, enhancement: Optional[str] = None)
             print(f"Enhanced query ({enhancement}): '{query}' -> '{updated_query}'\n")
             query = updated_query
 
-    results = hy_search.rrf_search(query, k_value, limit)
+    search_limit = limit
+    if rerank_method != None:
+        search_limit = limit * RERANK_MULT
+    results = hy_search.rrf_search(query, k_value, search_limit)
+
+    if rerank_method == "individual":
+        results = rerank_results(query, results, rerank_method, limit)
 
     print(f"Query: {query}")
     print(f"k: {k_value}")
@@ -170,6 +184,8 @@ def rrf_search_command(query, k_value, limit, enhancement: Optional[str] = None)
 
     for i, result in enumerate(results, 1):
         print(f"\n{i}. {result['title']}")
+        if rerank_method is not None:
+            print(f"Rerank Score: {result['rank']}/10")
         print(f"RRF Score: {result['rrf_score']:.4f}")
         print(
             f"BM25 Rank: {result['bm25_rank']}, Semantic Rank: {result['semantic_rank']}"

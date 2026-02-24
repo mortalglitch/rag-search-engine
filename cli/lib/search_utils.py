@@ -1,5 +1,6 @@
 import json
 import os
+import time
 from typing import Optional
 
 from dotenv import load_dotenv
@@ -15,6 +16,7 @@ SCORE_PRECISION = 3
 DEFAULT_HYBRID_ALPHA = 0.5
 DEFAULT_HYBRID_LIMIT = 5
 DEFAULT_K = 60
+RERANK_MULT = 5
 
 BM25_K1 = 1.5
 BM25_B = 0.75
@@ -158,3 +160,49 @@ def enhance_query(query: str, method: Optional[str] = None) -> str:
             return expand_query(query)
         case _:
             return query
+
+
+def rerank_individually(query, results, limit):
+    for doc in results:
+        prompt = f"""Rate how well this movie matches the search query.
+
+        Query: "{query}"
+        Movie: {doc.get("title", "")} - {doc.get("document", "")}
+
+        Consider:
+        - Direct relevance to query
+        - User intent (what they're looking for)
+        - Content appropriateness
+
+        Rate 0-10 (10 = perfect match).
+        Give me ONLY the number in your response, no other text or explanation.
+
+        Score:"""
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt,
+        )
+
+        stripped_response = (response.text or "").strip().strip('"')
+        numeric_response = int(stripped_response)
+        doc["rank"] = numeric_response
+
+        time.sleep(15)
+
+    sorted_results = sorted(
+        results,
+        key=lambda result: result["rank"],
+        reverse=True,
+    )
+
+    top_results = sorted_results[:limit]
+
+    return top_results
+
+
+def rerank_results(query, results, method, limit):
+    match method:
+        case "individual":
+            return rerank_individually(query, results, limit)
+        case _:
+            return results

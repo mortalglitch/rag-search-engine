@@ -63,6 +63,12 @@ def main() -> None:
         choices=["spell", "rewrite", "expand"],
         help="Query enhancement method",
     )
+    rrf_search_parser.add_argument(
+        "--rerank-method",
+        type=str,
+        choices=["individual"],
+        help="Enable LLM reranking method",
+    )
 
     args = parser.parse_args()
 
@@ -72,7 +78,9 @@ def main() -> None:
             for score in results:
                 print(f"* {score:.4f}")
         case "rrf-search":
-            rrf_search_command(args.query, args.k, args.limit, args.enhance)
+            rrf_search_command(
+                args.query, args.k, args.limit, args.enhance, args.rerank_method
+            )
         case "weighted-search":
             weighted_search_command(args.query, args.alpha, args.limit)
         case _:
