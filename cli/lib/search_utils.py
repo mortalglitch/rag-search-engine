@@ -187,6 +187,7 @@ def rerank_individually(query, results, limit):
         numeric_response = int(stripped_response)
         doc["rank"] = numeric_response
 
+        # Added time sleep 15 as the current free tier is 5 per minute 20 per day
         time.sleep(15)
 
     sorted_results = sorted(
