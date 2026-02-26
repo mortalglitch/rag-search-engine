@@ -175,7 +175,7 @@ def rrf_search_command(
         search_limit = limit * RERANK_MULT
     results = hy_search.rrf_search(query, k_value, search_limit)
 
-    if rerank_method == "individual":
+    if rerank_method is not None:
         results = rerank_results(query, results, rerank_method, limit)
 
     print(f"Query: {query}")
@@ -184,8 +184,10 @@ def rrf_search_command(
 
     for i, result in enumerate(results, 1):
         print(f"\n{i}. {result['title']}")
-        if rerank_method is not None:
+        if rerank_method == "individual":
             print(f"Rerank Score: {result['rank']}/10")
+        elif rerank_method == "batch":
+            print(f"Rerank Rank: {result['rank']}")
         print(f"RRF Score: {result['rrf_score']:.4f}")
         print(
             f"BM25 Rank: {result['bm25_rank']}, Semantic Rank: {result['semantic_rank']}"

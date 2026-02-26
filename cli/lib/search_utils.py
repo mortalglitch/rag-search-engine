@@ -6,6 +6,9 @@ from typing import Optional
 from dotenv import load_dotenv
 from google import genai
 
+# Optional for local model
+# from openai import OpenAI
+
 DEFAULT_SEARCH_LIMIT = 5
 DEFAULT_CHUNK_SIZE = 200
 MAX_CHUNK_SIZE = 4
@@ -201,9 +204,63 @@ def rerank_individually(query, results, limit):
     return top_results
 
 
+def rerank_batch(query, results, limit):
+
+    doc_list_str = str(results)
+
+    # Original """Rank these movies by relevance to the search query.
+    prompt = f"""Rank these movies by relevance to the search query.
+
+    Query: "{query}"
+
+    Movies:
+    {doc_list_str}
+
+    Return ONLY the IDs in order of relevance (best match first). Return a valid JSON list, nothing else. For example:
+
+    [75, 12, 34, 2, 1]
+    """
+
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt,
+    )
+    # Optional local AI model code
+    # client = OpenAI(
+    #     base_url="http://127.0.0.1:8080/v1", api_key="required-but-ignored-locally"
+    # )
+    print(response.text)
+    stripped_response = (response.text or "").strip().strip('"')
+    # stripped_response = (response.choices[0].message.content or "").strip().strip("`")
+    # updated_stripped_response = stripped_response.replace("json", "")
+
+    scores_list: list[int] = json.loads(stripped_response)
+    # scores_list: list[int] = json.loads(updated_stripped_response)
+    print(f"Results Length: {len(results)}")
+    for document in results:
+        # document["rank"] = scores_list.index(document["id"] + 1)
+        if document["id"] in scores_list:
+            print("ID Found")
+        print(f"Scores list: {scores_list}")
+        print(f"Current Document ID: {document['id']}")
+        document["rank"] = scores_list.index(document["id"]) + 1
+
+    sorted_results = sorted(
+        results,
+        key=lambda result: result["rank"],
+        reverse=True,
+    )
+
+    top = sorted_results[:limit]
+
+    return top
+
+
 def rerank_results(query, results, method, limit):
     match method:
         case "individual":
             return rerank_individually(query, results, limit)
+        case "batch":
+            return rerank_batch(query, results, limit)
         case _:
             return results
