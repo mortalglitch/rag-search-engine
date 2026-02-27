@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import time
 from typing import Optional
 
@@ -229,26 +230,25 @@ def rerank_batch(query, results, limit):
     # client = OpenAI(
     #     base_url="http://127.0.0.1:8080/v1", api_key="required-but-ignored-locally"
     # )
-    print(response.text)
-    stripped_response = (response.text or "").strip().strip('"')
+    # stripped_response = (response.text or "").strip().strip('"')
+    cleaned_response = re.search(r"\[[\d,\s]+\]", str(response.text))
     # stripped_response = (response.choices[0].message.content or "").strip().strip("`")
     # updated_stripped_response = stripped_response.replace("json", "")
+    new_list: str = ""
+    if cleaned_response:
+        new_list = cleaned_response.group(0)
 
-    scores_list: list[int] = json.loads(stripped_response)
-    # scores_list: list[int] = json.loads(updated_stripped_response)
+    scores_list: list[int]
+    scores_list = json.loads(new_list)
+
     print(f"Results Length: {len(results)}")
     for document in results:
-        # document["rank"] = scores_list.index(document["id"] + 1)
-        if document["id"] in scores_list:
-            print("ID Found")
-        print(f"Scores list: {scores_list}")
-        print(f"Current Document ID: {document['id']}")
-        document["rank"] = scores_list.index(document["id"]) + 1
+        document["rank"] = scores_list.index(document["id"])
 
     sorted_results = sorted(
         results,
         key=lambda result: result["rank"],
-        reverse=True,
+        reverse=False,
     )
 
     top = sorted_results[:limit]
