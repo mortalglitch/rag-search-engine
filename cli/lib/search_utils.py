@@ -6,6 +6,7 @@ from typing import Optional
 
 from dotenv import load_dotenv
 from google import genai
+from sentence_transformers import CrossEncoder, SentenceTransformer
 
 # Optional for local model
 # from openai import OpenAI
@@ -256,11 +257,36 @@ def rerank_batch(query, results, limit):
     return top
 
 
+def rerank_cross_encoder(query, results, limit):
+    pairs: list = []
+    for doc in results:
+        pairs.append([query, f"{doc.get('title', '')} - {doc.get('document', '')}"])
+
+    cross_encoder = CrossEncoder("cross-encoder/ms-marco-TinyBERT-L2-v2")
+
+    scores = cross_encoder.predict(pairs)
+
+    for i, doc in enumerate(results):
+        doc["rank"] = scores[i]
+
+    sorted_results = sorted(
+        results,
+        key=lambda result: result["rank"],
+        reverse=True,
+    )
+
+    top_scores = sorted_results[:limit]
+
+    return top_scores
+
+
 def rerank_results(query, results, method, limit):
     match method:
-        case "individual":
-            return rerank_individually(query, results, limit)
         case "batch":
             return rerank_batch(query, results, limit)
+        case "individual":
+            return rerank_individually(query, results, limit)
+        case "cross_encoder":
+            return rerank_cross_encoder(query, results, limit)
         case _:
             return results
