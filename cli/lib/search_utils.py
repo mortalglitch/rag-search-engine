@@ -33,6 +33,7 @@ CACHE_DIR = os.path.join(PROJECT_ROOT, "cache")
 MOVIE_EMBEDDINGS_PATH = os.path.join(PROJECT_ROOT, "cache/movie_embeddings.npy")
 CHUNK_EMBEDDINGS_PATH = os.path.join(PROJECT_ROOT, "cache/chunk_embeddings.npy")
 CHUNK_METADATA_PATH = os.path.join(PROJECT_ROOT, "cache/chunk_metadata.json")
+GOLDEN_DATA_PATH = os.path.join(PROJECT_ROOT, "data", "golden_dataset.json")
 
 
 # AI Model information and setup
@@ -41,6 +42,12 @@ api_key = os.environ.get("GEMINI_API_KEY")
 if api_key != None:
     print(f"Using key {api_key[:6]}...")
     client = genai.Client(api_key=api_key)
+
+
+def load_golden_dataset() -> list[dict]:
+    with open(GOLDEN_DATA_PATH, "r") as f:
+        golden_data = json.load(f)
+    return golden_data["test_cases"]
 
 
 def load_movies() -> list[dict]:

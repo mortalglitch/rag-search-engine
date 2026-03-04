@@ -162,7 +162,6 @@ def rrf_search_command(
     documents = load_movies()
     hy_search = HybridSearch(documents)
 
-    original_query = query
     updated_query = None
     if enhancement:
         updated_query = enhance_query(query, method=enhancement)
@@ -195,6 +194,8 @@ def rrf_search_command(
             f"BM25 Rank: {result['bm25_rank']}, Semantic Rank: {result['semantic_rank']}"
         )
         print(f"   {result['description'][:DOCUMENT_PREVIEW_LENGTH]}...")
+
+    return results
 
 
 def weighted_search_command(query, alpha, limit):
