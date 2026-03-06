@@ -33,10 +33,13 @@ def main():
                 relevant.append(item["title"])
             retrieved.append(item["title"])
         precision_result = 0
+        recall_result = 0
         if total_matched != 0:
             precision_result = total_matched / len(rrf_results)
+            recall_result = len(relevant) / len(relevant_docs)
         print(f"- Query: {query}")
         print(f"  - Precision@{limit}: {precision_result:.4f}")
+        print(f"  - Recall@{limit}: {recall_result:.4f}")
         print(f"  - Retrieved: {retrieved}")
         print(f"  - Relevant: {relevant}")
 
