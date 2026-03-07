@@ -85,6 +85,7 @@ def main() -> None:
                 print(f"   {res['document'][:100]}...")
                 print()
         case "rrf-search":
+            print(f"Query: {args.query}")
             result = rrf_search_command(
                 args.query, args.k, args.enhance, args.rerank_method, args.limit
             )
