@@ -1,6 +1,6 @@
 import argparse
 
-from lib.augmented_generation import rag_command
+from lib.augmented_generation import rag_command, summary_command
 
 
 def main():
@@ -12,12 +12,27 @@ def main():
     )
     rag_parser.add_argument("query", type=str, help="Search query for RAG")
 
+    summary_parser = subparsers.add_parser(
+        "summarize", help="Summarize the results using a LLM"
+    )
+    summary_parser.add_argument(
+        "query", type=str, help="query to search to later be summarized"
+    )
+    summary_parser.add_argument(
+        "--limit", type=int, default=5, help="Number of results to return (default=5)"
+    )
+
     args = parser.parse_args()
 
     match args.command:
         case "rag":
             query = args.query
             rag_command(query)
+        case "summarize":
+            query = args.query
+            limit = args.limit
+            summary_command(query, limit)
+
         case _:
             parser.print_help()
 
