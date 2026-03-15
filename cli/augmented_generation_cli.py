@@ -1,6 +1,11 @@
 import argparse
 
-from lib.augmented_generation import rag_command, summary_command
+from lib.augmented_generation import (
+    citations_command,
+    question_command,
+    rag_command,
+    summary_command,
+)
 
 
 def main():
@@ -22,9 +27,37 @@ def main():
         "--limit", type=int, default=5, help="Number of results to return (default=5)"
     )
 
+    citations_parser = subparsers.add_parser(
+        "citations", help="User a LLM to generate results with citations."
+    )
+    citations_parser.add_argument(
+        "query", type=str, help="query to search to later be summarized"
+    )
+    citations_parser.add_argument(
+        "--limit", type=int, default=5, help="Number of results to return (default=5)"
+    )
+
+    question_parser = subparsers.add_parser(
+        "question", help="question for the LLM regarding a movie"
+    )
+    question_parser.add_argument(
+        "question", type=str, help="question to search to later be summarized"
+    )
+    question_parser.add_argument(
+        "--limit", type=int, default=5, help="Number of results to return (default=5)"
+    )
+
     args = parser.parse_args()
 
     match args.command:
+        case "citations":
+            query = args.query
+            limit = args.limit
+            citations_command(query, limit)
+        case "question":
+            question = args.question
+            limit = args.limit
+            question_command(question, limit)
         case "rag":
             query = args.query
             rag_command(query)

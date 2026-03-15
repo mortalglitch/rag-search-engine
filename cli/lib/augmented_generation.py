@@ -12,6 +12,77 @@ client = genai.Client(api_key=api_key)
 model = "gemini-2.5-flash"
 
 
+def citations_command(query, limit):
+    search_results = rrf_search_command(query, RRF_K, None, None, limit)
+
+    docs = str(
+        [
+            f"{result['title']} - {result['document'][:100]}"
+            for result in search_results["results"]
+        ]
+    )
+
+    prompt = f"""Answer the question or provide information based on the provided documents.
+
+    This should be tailored to Hoopla users. Hoopla is a movie streaming service.
+
+    If not enough information is available to give a good answer, say so but give as good of an answer as you can while citing the sources you have.
+
+    Query: {query}
+
+    Documents:
+    {docs}
+
+    Instructions:
+    - Provide a comprehensive answer that addresses the query
+    - Cite sources using [1], [2], etc. format when referencing information
+    - If sources disagree, mention the different viewpoints
+    - If the answer isn't in the documents, say "I don't have enough information"
+    - Be direct and informative
+
+    Answer:"""
+    response = client.models.generate_content(model=model, contents=prompt)
+    citation_response = (response.text or "").strip()
+    print("Search Results:")
+    for document in search_results["results"]:
+        print(f" - {document['title']}")
+    print(f"LLM Answer:\n {citation_response}")
+
+
+def question_command(question, limit):
+    search_results = rrf_search_command(question, RRF_K, None, None, limit)
+
+    docs = str(
+        [
+            f"{result['title']} - {result['document']}"
+            for result in search_results["results"]
+        ]
+    )
+
+    prompt = f"""Answer the user's question based on the provided movies that are available on Hoopla.
+
+    This should be tailored to Hoopla users. Hoopla is a movie streaming service.
+
+    Question: {question}
+
+    Documents:
+    {docs}
+
+    Instructions:
+    - Answer questions directly and concisely
+    - Be casual and conversational
+    - Don't be cringe or hype-y
+    - Talk like a normal person would in a chat conversation
+
+    Answer:"""
+    response = client.models.generate_content(model=model, contents=prompt)
+    question_response = (response.text or "").strip()
+    print("Search Results:")
+    for document in search_results["results"]:
+        print(f" - {document['title']}")
+    print(f"Answer:\n {question_response}")
+
+
 def rag_command(query):
     search_results = rrf_search_command(query, RRF_K, None, None, DEFAULT_SEARCH_LIMIT)
 
