@@ -6,8 +6,9 @@ from sentence_transformers import SentenceTransformer
 
 
 class MultimodalSearch:
-    def __init__(self, model_name="clip-ViT-B-32"):
+    def __init__(self, documents, model_name="clip-ViT-B-32"):
         self.model = SentenceTransformer(model_name)
+        self.documents = documents
 
     def embed_image(self, image: str):
         if not os.path.exists(image):
@@ -19,8 +20,10 @@ class MultimodalSearch:
         return embedding
 
 
+# updated to support document load.
 def verify_image_embedding(image: str):
-    instance = MultimodalSearch()
+    documents = load_movies()
+    instance = MultimodalSearch(documents)
     embedding = instance.embed_image(image)
 
     print(f"Embedding shape: {embedding.shape[0]} dimensions")
