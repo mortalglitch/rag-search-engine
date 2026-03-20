@@ -1,6 +1,6 @@
 import argparse
 
-from lib.multimodal_search import verify_image_embedding
+from lib.multimodal_search import image_search_command, verify_image_embedding
 
 
 def main():
@@ -14,9 +14,16 @@ def main():
         "image", type=str, help="Image file location"
     )
 
+    image_search_parser = subparsers.add_parser(
+        "image_search", help="Search using a provided image"
+    )
+    image_search_parser.add_argument("image", type=str, help="Image to search with")
+
     args = parser.parse_args()
 
     match args.command:
+        case "image_search":
+            image_search_command(args.image)
         case "verify_image_embedding":
             verify_image_embedding(args.image)
         case _:
